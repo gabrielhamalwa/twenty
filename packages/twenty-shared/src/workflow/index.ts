@@ -128,6 +128,7 @@ export { extractRawVariableNamePart } from './utils/extractRawVariableNameParts'
 export { getFunctionInputFromInputSchema } from './utils/getFunctionInputFromInputSchema';
 export { getWorkflowRunContext } from './utils/getWorkflowRunContext';
 export { isStandaloneVariableString } from './utils/isStandaloneVariableString';
+export { normalizeStepOutputKey } from './utils/normalizeStepOutputKey';
 export { parseBooleanFromStringValue } from './utils/parseBooleanFromStringValue';
 export { parseDataFromContentType } from './utils/parseDataFromContentType';
 export {

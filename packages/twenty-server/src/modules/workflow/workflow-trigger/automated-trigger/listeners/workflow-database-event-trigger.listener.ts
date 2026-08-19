@@ -10,7 +10,11 @@ import {
 } from 'twenty-shared/database-events';
 import { FeatureFlagKey, type ObjectRecord } from 'twenty-shared/types';
 import { isDefined, isNonEmptyArray } from 'twenty-shared/utils';
-import { TRIGGER_STEP_ID } from 'twenty-shared/workflow';
+import { isNonEmptyString } from '@sniptt/guards';
+import {
+  isStandaloneVariableString,
+  TRIGGER_STEP_ID,
+} from 'twenty-shared/workflow';
 import { In, Raw } from 'typeorm';
 
 import { OnDatabaseBatchEvent } from 'src/engine/api/graphql/graphql-query-runner/decorators/on-database-batch-event.decorator';
@@ -478,6 +482,25 @@ export class WorkflowDatabaseEventTriggerListener {
 
     if (!isDefined(filter) || !isNonEmptyArray(filter.stepFilters)) {
       return true;
+    }
+
+    // resolveInput only substitutes `{{...}}` templates, so a stepOutputKey
+    // stored as a bare path is compared as a literal string and the filter
+    // silently blocks every event.
+    const unresolvableStepOutputKeys = filter.stepFilters
+      .map((stepFilter) => stepFilter.stepOutputKey)
+      .filter(
+        (stepOutputKey) =>
+          isNonEmptyString(stepOutputKey) &&
+          !isStandaloneVariableString(stepOutputKey),
+      );
+
+    if (isNonEmptyArray(unresolvableStepOutputKeys)) {
+      this.logger.warn(
+        `Database-event trigger filter for workflow ${eventListener.workflowId} can never match: ${unresolvableStepOutputKeys.join(
+          ', ',
+        )} is not a variable template`,
+      );
     }
 
     try {
